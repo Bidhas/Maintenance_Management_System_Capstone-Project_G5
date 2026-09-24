@@ -1,0 +1,2 @@
+-- All table definitions go here. Run this file to set up your local database.
+-- Anyone who changes a table edits this file and tells the group.
