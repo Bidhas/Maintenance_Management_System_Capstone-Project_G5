@@ -1,0 +1,59 @@
+/* ============================================================
+   CMMS — Design tokens
+   Shared across every page (login, dashboards, etc). Import this
+   once, globally, in main.jsx / index.jsx.
+   ============================================================ */
+
+:root {
+  /* Colors — status colors carry meaning, keep them consistent everywhere:
+     amber = action / urgent-medium, teal = in progress, rust = urgent/overdue,
+     moss = completed / success */
+  --paper: #ECEFEA;
+  --panel: #F5F7F3;
+  --ink: #1C201D;
+  --steel: #3C4A45;
+  --steel-line: rgba(28, 32, 29, 0.14);
+  --amber: #E2A33B;
+  --teal: #2F7A73;
+  --rust: #B54B2E;
+  --moss: #56794A;
+
+  /* Type — metric-compatible system stacks so the layout matches
+     the design comps without needing a webfont request. */
+  --font-mono: 'Courier New', Courier, monospace;
+  --font-sans: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
