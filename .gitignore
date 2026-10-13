@@ -1,4 +1,32 @@
+# Dependencies
 node_modules/
+server/node_modules/
+client/node_modules/
+
+# Build output
+client/dist/
+client/dist-ssr/
+
+# Environment
+server/.env
 .env
-dist/
-build/
+.env.local
+
+# Uploads (local photo storage fallback)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Test coverage
+coverage/
