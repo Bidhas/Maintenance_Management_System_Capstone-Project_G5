@@ -1,0 +1,18 @@
+{
+  "name": "cmms-campuscare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CampusCare CMMS — IDE201 Group 5 capstone. Root scripts to set up and run both server and client.",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "db:setup": "npm run migrate --prefix server && npm run seed --prefix server",
+    "dev": "concurrently -n SERVER,CLIENT -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build:client": "npm run build --prefix client",
+    "test:server": "npm test --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}
