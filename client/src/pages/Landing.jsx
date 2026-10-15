@@ -3,12 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { dashboardPath } from '../lib/paths';
 
 const FEATURES = [
-  ['📝', 'Report in seconds', 'Pick the block, building and room, describe the issue, add a photo — done. Urgency is yours to set.'],
-  ['🧭', 'Smart routing', 'Hostel jobs go to a gender-matched volunteer; everything else goes to a specialist. Only people on duty are assigned.'],
-  ['⬆️', 'Escalate when needed', 'A volunteer who is out of their depth hands the job up to a Main Technician with one click — fully logged.'],
-  ['🔁', 'Reopen if it comes back', 'Fix did not hold? Reopen the same request instead of starting over. The full history stays attached.'],
-  ['🔔', 'Stay in the loop', 'In-app and email updates at every step: received, assigned, in progress, completed.'],
-  ['📊', 'Reports and audit trail', 'Per-category and per-block reports with CSV export, plus an append-only log of every admin action.'],
+  ['Report in seconds', 'Pick the block, building and room, describe the issue, add a photo — done. Urgency is yours to set.'],
+  ['Smart routing', 'Hostel jobs go to a gender-matched volunteer; everything else goes to a specialist. Only people on duty are assigned.'],
+  ['Escalate when needed', 'A volunteer who is out of their depth hands the job up to a Main Technician with one click — fully logged.'],
+  ['Reopen if it comes back', 'Fix did not hold? Reopen the same request instead of starting over. The full history stays attached.'],
+  ['Stay in the loop', 'In-app and email updates at every step: received, assigned, in progress, completed.'],
+  ['Reports and audit trail', 'Per-category and per-block reports with CSV export, plus an append-only log of every admin action.'],
 ];
 
 export default function Landing() {
@@ -38,7 +38,7 @@ export default function Landing() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-14 rv">
         <section className="text-center max-w-3xl mx-auto">
-          <span className="chip cy">Royal University of Bhutan · IDE201 Group 5</span>
+          <span className="chip cy">Royal University of Bhutan</span>
           <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.05] mt-5">
             Fix it faster.<br /><span style={{ color: 'var(--ac)' }}>Campus-wide.</span>
           </h1>
@@ -58,9 +58,8 @@ export default function Landing() {
         </section>
 
         <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-16">
-          {FEATURES.map(([icon, title, text]) => (
+          {FEATURES.map(([title, text]) => (
             <div key={title} data-tilt className="g p-6">
-              <div className="text-3xl">{icon}</div>
               <h3 className="font-bold text-lg mt-3">{title}</h3>
               <p className="text-mu text-sm mt-2">{text}</p>
             </div>
