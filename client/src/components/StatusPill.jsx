@@ -1,4 +1,5 @@
-import { STATUS_STYLE } from '../lib/format';
+import { STATUS_CLASS } from '../lib/ui';
+
 export default function StatusPill({ status }) {
-  return <span className={`text-xs font-semibold ${STATUS_STYLE[status] || 'text-ink/60'}`}>{status}</span>;
+  return <span className={`chip ${STATUS_CLASS[status] || 'mu'}`}>{status}</span>;
 }

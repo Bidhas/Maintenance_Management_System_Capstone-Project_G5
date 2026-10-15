@@ -1,12 +1,20 @@
+import { useEffect } from 'react';
+
+/** Glass dialog. Click the backdrop, the x, or press Esc to close. */
 export default function Modal({ open, title, onClose, children, wide }) {
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" style={{ background: 'rgba(2,10,16,.72)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
-      <div className={`g w-full ${wide ? 'max-w-xl' : 'max-w-md'} p-6 my-8 rv`} style={{ background: 'rgba(10,32,45,.88)' }} onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="font-bold text-base lg">{title}</div>
-          <button onClick={onClose} className="text-mu hover:text-tx text-lg leading-none" aria-label="Close">✕</button>
-        </div>
+    <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="backdrop" onClick={onClose} />
+      <div className={`g modal-card${wide ? ' wide' : ''}`}>
+        <button type="button" className="x" onClick={onClose} aria-label="Close">×</button>
+        {title && <h2>{title}</h2>}
         {children}
       </div>
     </div>

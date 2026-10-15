@@ -4,7 +4,11 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Shell from './components/Shell';
 
+import StudentNewRequest from './pages/student/NewRequest';
+import StudentMyRequests from './pages/student/MyRequests';
+import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import RequestDetail from './pages/RequestDetail';
 
 import Landing from './pages/Landing';
 import { dashboardPath } from './lib/paths';
@@ -43,11 +47,16 @@ export default function App() {
 
       <Route element={<Shell />}>
         {/* Temporary: this role's home page arrives in a later sprint, so send them to Profile for now */}
-        <Route path="/requests/new" element={<Protected roles={['requester']}><Navigate to="/profile" replace /></Protected>} />
         <Route path="/tech/work-orders" element={<Protected roles={['technician']}><Navigate to="/profile" replace /></Protected>} />
         <Route path="/admin/overview" element={<Protected roles={['admin']}><Navigate to="/profile" replace /></Protected>} />
 
+        {/* Student / Staff / Faculty (requester) */}
+        <Route path="/requests/new" element={<Protected roles={['requester']}><StudentNewRequest /></Protected>} />
+        <Route path="/requests/mine" element={<Protected roles={['requester']}><StudentMyRequests /></Protected>} />
+
         {/* Shared detail + notifications + profile */}
+        <Route path="/requests/:id" element={<Protected roles={['requester', 'technician', 'admin']}><RequestDetail /></Protected>} />
+        <Route path="/notifications" element={<Protected roles={['requester', 'technician', 'admin']}><Notifications /></Protected>} />
         <Route path="/profile" element={<Protected roles={['requester', 'technician', 'admin']}><Profile /></Protected>} />
       </Route>
 

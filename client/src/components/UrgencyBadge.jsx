@@ -1,4 +1,6 @@
-import { urgencyBadge, urgencyLabel } from '../lib/format';
+import { URGENCY_CLASS } from '../lib/ui';
+import { urgencyLabel } from '../lib/format';
+
 export default function UrgencyBadge({ urgency }) {
-  return <span className={urgencyBadge(urgency)}>{urgencyLabel(urgency)}</span>;
+  return <span className={`chip ${URGENCY_CLASS[urgency] || 'mu'}`}>{urgencyLabel(urgency)}</span>;
 }
