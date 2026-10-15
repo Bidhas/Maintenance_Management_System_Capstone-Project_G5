@@ -15,6 +15,10 @@ app.use('/uploads', express.static(config.uploadDir));
 app.get('/api/health', (_req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/requests', require('./routes/requests'));
+app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/categories', require('./routes/categories'));
+app.use('/api/blocks', require('./routes/blocks'));
 app.use('/api/notifications', require('./routes/notifications'));
 
 // Serve the built React app in production (single-service deploy on Render)
