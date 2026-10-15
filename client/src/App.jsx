@@ -10,6 +10,11 @@ import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import RequestDetail from './pages/RequestDetail';
 
+import AdminOverview from './pages/admin/Overview';
+import AdminRequests from './pages/admin/Requests';
+import AdminTechnicians from './pages/admin/Technicians';
+import AdminSettings from './pages/admin/Settings';
+import AdminUsers from './pages/admin/Users';
 import Landing from './pages/Landing';
 import { dashboardPath } from './lib/paths';
 
@@ -48,7 +53,6 @@ export default function App() {
       <Route element={<Shell />}>
         {/* Temporary: this role's home page arrives in a later sprint, so send them to Profile for now */}
         <Route path="/tech/work-orders" element={<Protected roles={['technician']}><Navigate to="/profile" replace /></Protected>} />
-        <Route path="/admin/overview" element={<Protected roles={['admin']}><Navigate to="/profile" replace /></Protected>} />
 
         {/* Student / Staff / Faculty (requester) */}
         <Route path="/requests/new" element={<Protected roles={['requester']}><StudentNewRequest /></Protected>} />
@@ -58,6 +62,13 @@ export default function App() {
         <Route path="/requests/:id" element={<Protected roles={['requester', 'technician', 'admin']}><RequestDetail /></Protected>} />
         <Route path="/notifications" element={<Protected roles={['requester', 'technician', 'admin']}><Notifications /></Protected>} />
         <Route path="/profile" element={<Protected roles={['requester', 'technician', 'admin']}><Profile /></Protected>} />
+
+        {/* Admin */}
+        <Route path="/admin/overview" element={<Protected roles={['admin']}><AdminOverview /></Protected>} />
+        <Route path="/admin/requests" element={<Protected roles={['admin']}><AdminRequests /></Protected>} />
+        <Route path="/admin/technicians" element={<Protected roles={['admin']}><AdminTechnicians /></Protected>} />
+        <Route path="/admin/settings" element={<Protected roles={['admin']}><AdminSettings /></Protected>} />
+        <Route path="/admin/users" element={<Protected roles={['admin']}><AdminUsers /></Protected>} />
       </Route>
 
       <Route path="*" element={<RoleAwareFallback />} />
