@@ -16,10 +16,14 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, time: new Date().toIS
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/requests', require('./routes/requests'));
+app.use('/api/requests', require('./routes/requests.admin'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/technicians', require('./routes/technicians'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/blocks', require('./routes/blocks'));
+app.use('/api/users', require('./routes/users'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/settings', require('./routes/settings'));
 
 // Serve the built React app in production (single-service deploy on Render)
 const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');

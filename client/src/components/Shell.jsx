@@ -14,6 +14,11 @@ const NAV = {
   technician: [
   ],
   admin: [
+    { to: '/admin/overview', label: 'Overview' },
+    { to: '/admin/requests', label: 'Requests' },
+    { to: '/admin/technicians', label: 'Technicians' },
+    { to: '/admin/users', label: 'Users' },
+    { to: '/admin/settings', label: 'Settings' },
   ],
 };
 
