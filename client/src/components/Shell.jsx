@@ -12,11 +12,14 @@ const NAV = {
     { to: '/requests/new', label: 'New request' },
   ],
   technician: [
+    { to: '/tech/work-orders', label: 'My jobs' },
+    { to: '/tech/completed', label: 'Completed' },
   ],
   admin: [
     { to: '/admin/overview', label: 'Overview' },
     { to: '/admin/requests', label: 'Requests' },
     { to: '/admin/technicians', label: 'Technicians' },
+    { to: '/admin/escalations', label: 'Escalations' },
     { to: '/admin/users', label: 'Users' },
     { to: '/admin/settings', label: 'Settings' },
   ],
