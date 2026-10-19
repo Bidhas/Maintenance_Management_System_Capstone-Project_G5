@@ -10,11 +10,15 @@ import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import RequestDetail from './pages/RequestDetail';
 
+import TechWorkOrders from './pages/technician/WorkOrders';
+import TechCompleted from './pages/technician/Completed';
+
 import AdminOverview from './pages/admin/Overview';
 import AdminRequests from './pages/admin/Requests';
 import AdminTechnicians from './pages/admin/Technicians';
 import AdminSettings from './pages/admin/Settings';
 import AdminUsers from './pages/admin/Users';
+import AdminEscalations from './pages/admin/Escalations';
 import Landing from './pages/Landing';
 import { dashboardPath } from './lib/paths';
 
@@ -51,12 +55,13 @@ export default function App() {
       <Route path="/register" element={<Register />} />
 
       <Route element={<Shell />}>
-        {/* Temporary: this role's home page arrives in a later sprint, so send them to Profile for now */}
-        <Route path="/tech/work-orders" element={<Protected roles={['technician']}><Navigate to="/profile" replace /></Protected>} />
-
         {/* Student / Staff / Faculty (requester) */}
         <Route path="/requests/new" element={<Protected roles={['requester']}><StudentNewRequest /></Protected>} />
         <Route path="/requests/mine" element={<Protected roles={['requester']}><StudentMyRequests /></Protected>} />
+
+        {/* Technician */}
+        <Route path="/tech/work-orders" element={<Protected roles={['technician']}><TechWorkOrders /></Protected>} />
+        <Route path="/tech/completed" element={<Protected roles={['technician']}><TechCompleted /></Protected>} />
 
         {/* Shared detail + notifications + profile */}
         <Route path="/requests/:id" element={<Protected roles={['requester', 'technician', 'admin']}><RequestDetail /></Protected>} />
@@ -69,6 +74,7 @@ export default function App() {
         <Route path="/admin/technicians" element={<Protected roles={['admin']}><AdminTechnicians /></Protected>} />
         <Route path="/admin/settings" element={<Protected roles={['admin']}><AdminSettings /></Protected>} />
         <Route path="/admin/users" element={<Protected roles={['admin']}><AdminUsers /></Protected>} />
+        <Route path="/admin/escalations" element={<Protected roles={['admin']}><AdminEscalations /></Protected>} />
       </Route>
 
       <Route path="*" element={<RoleAwareFallback />} />
