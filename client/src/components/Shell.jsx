@@ -20,7 +20,9 @@ const NAV = {
     { to: '/admin/requests', label: 'Requests' },
     { to: '/admin/technicians', label: 'Technicians' },
     { to: '/admin/escalations', label: 'Escalations' },
+    { to: '/admin/reports', label: 'Reports' },
     { to: '/admin/users', label: 'Users' },
+    { to: '/admin/audit', label: 'Audit log' },
     { to: '/admin/settings', label: 'Settings' },
   ],
 };
