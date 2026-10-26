@@ -16,8 +16,10 @@ import TechCompleted from './pages/technician/Completed';
 import AdminOverview from './pages/admin/Overview';
 import AdminRequests from './pages/admin/Requests';
 import AdminTechnicians from './pages/admin/Technicians';
+import AdminReports from './pages/admin/Reports';
 import AdminSettings from './pages/admin/Settings';
 import AdminUsers from './pages/admin/Users';
+import AdminAudit from './pages/admin/Audit';
 import AdminEscalations from './pages/admin/Escalations';
 import Landing from './pages/Landing';
 import { dashboardPath } from './lib/paths';
@@ -72,8 +74,10 @@ export default function App() {
         <Route path="/admin/overview" element={<Protected roles={['admin']}><AdminOverview /></Protected>} />
         <Route path="/admin/requests" element={<Protected roles={['admin']}><AdminRequests /></Protected>} />
         <Route path="/admin/technicians" element={<Protected roles={['admin']}><AdminTechnicians /></Protected>} />
+        <Route path="/admin/reports" element={<Protected roles={['admin']}><AdminReports /></Protected>} />
         <Route path="/admin/settings" element={<Protected roles={['admin']}><AdminSettings /></Protected>} />
         <Route path="/admin/users" element={<Protected roles={['admin']}><AdminUsers /></Protected>} />
+        <Route path="/admin/audit" element={<Protected roles={['admin']}><AdminAudit /></Protected>} />
         <Route path="/admin/escalations" element={<Protected roles={['admin']}><AdminEscalations /></Protected>} />
       </Route>
 

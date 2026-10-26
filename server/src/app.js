@@ -19,6 +19,7 @@ app.use('/api/requests', require('./routes/requests'));
 app.use('/api/requests', require('./routes/requests.admin'));
 app.use('/api/requests', require('./routes/requests.work'));
 app.use('/api/requests', require('./routes/requests.escalate'));
+app.use('/api/requests', require('./routes/requests.followup'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/technicians', require('./routes/technicians'));
 app.use('/api/categories', require('./routes/categories'));
@@ -26,6 +27,8 @@ app.use('/api/blocks', require('./routes/blocks'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/settings', require('./routes/settings'));
+app.use('/api/audit', require('./routes/audit'));
+app.use('/api/reports', require('./routes/reports'));
 app.use('/api/escalations', require('./routes/escalations'));
 
 // Serve the built React app in production (single-service deploy on Render)
