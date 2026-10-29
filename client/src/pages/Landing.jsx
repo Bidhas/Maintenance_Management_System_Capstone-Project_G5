@@ -3,12 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { dashboardPath } from '../lib/paths';
 
 const FEATURES = [
-  ['Report in seconds', 'Pick the block, building and room, describe the issue, add a photo — done. Urgency is yours to set.'],
-  ['Smart routing', 'Hostel jobs go to a gender-matched volunteer; everything else goes to a specialist. Only people on duty are assigned.'],
+  ['Report in seconds', 'Sign in with your college Google account, pick the block, floor and room, describe the issue, add a photo — done.'],
+  ['Technicians pick the job', 'Every request is visible to every technician on the job board. Main technicians work 8 AM – 5 PM, volunteers 7 – 9 PM.'],
   ['Escalate when needed', 'A volunteer who is out of their depth hands the job up to a Main Technician with one click — fully logged.'],
   ['Reopen if it comes back', 'Fix did not hold? Reopen the same request instead of starting over. The full history stays attached.'],
-  ['Stay in the loop', 'In-app and email updates at every step: received, assigned, in progress, completed.'],
-  ['Reports and audit trail', 'Per-category and per-block reports with CSV export, plus an append-only log of every admin action.'],
+  ['Stay in the loop', 'In-app and email updates when your request is submitted and when the work is completed.'],
+  ['Reports and maintenance log', 'Per-category and per-block reports, plus a log of completed work by room, technician and equipment used.'],
 ];
 
 export default function Landing() {
@@ -29,8 +29,7 @@ export default function Landing() {
             <Link to={dashboardPath(user)} className="btn">Open my dashboard →</Link>
           ) : (
             <>
-              <Link to="/login" className="btn s">Log in</Link>
-              <Link to="/register" className="btn">Sign up</Link>
+              <Link to="/login" className="btn">Continue with Google</Link>
             </>
           )}
         </div>
@@ -38,7 +37,7 @@ export default function Landing() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-14 rv">
         <section className="text-center max-w-3xl mx-auto">
-          <span className="chip cy">Royal University of Bhutan</span>
+          <span className="chip cy">Royal University of Bhutan · IDE201 Group 5</span>
           <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.05] mt-5">
             Fix it faster.<br /><span style={{ color: 'var(--ac)' }}>Campus-wide.</span>
           </h1>
@@ -50,8 +49,7 @@ export default function Landing() {
               <Link to={dashboardPath(user)} className="btn px-6 py-3 text-sm">Open my dashboard →</Link>
             ) : (
               <>
-                <Link to="/register" className="btn px-6 py-3 text-sm">Report a problem</Link>
-                <Link to="/login" className="btn s px-6 py-3 text-sm">I already have an account</Link>
+                <Link to="/login" className="btn px-6 py-3 text-sm">Continue with Google</Link>
               </>
             )}
           </div>

@@ -19,7 +19,7 @@ function Switch({ checked, onChange, label }) {
 function DutyCard({ user, onChanged }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
-  const OPTIONS = [['auto', 'Auto', 'Follow the schedule: weekday 7 to 9 PM and weekends'], ['on', 'On duty', 'Available for new jobs right now'], ['off', 'Off duty', 'Do not assign me anything']];
+  const OPTIONS = [['auto', 'Auto', 'Follow the schedule: Main 8 AM to 5 PM, Volunteers 7 to 9 PM, every day'], ['on', 'On duty', 'Available for new jobs right now'], ['off', 'Off duty', 'Do not assign me anything']];
   async function pick(mode) {
     setBusy(true);
     try { await api.patch('/auth/duty', { duty_override: mode }); await onChanged(); toast.success('Duty status updated'); }
@@ -111,7 +111,7 @@ export default function Profile() {
             <h2>Personal details</h2>
             <div className="row">
               <Fld id="p-name" label="Full name" error={fields.name}><input id="p-name" value={form.name} onChange={set('name')} required /></Fld>
-              {user.role === 'requester' && <Fld id="p-cid" label="Student ID" error={fields.college_id}><input id="p-cid" value={form.college_id} onChange={set('college_id')} /></Fld>}
+              {user.role === 'requester' && <Fld id="p-cid" label="Student / staff ID" error={fields.college_id}><input id="p-cid" value={form.college_id} onChange={set('college_id')} placeholder="Taken from your college email" /></Fld>}
               <Fld id="p-email" label="Email"><input id="p-email" value={user.email} disabled /></Fld>
               <Fld id="p-phone" label="Phone" error={fields.phone}><input id="p-phone" value={form.phone} onChange={set('phone')} /></Fld>
               {user.role === 'requester' && (
@@ -132,6 +132,7 @@ export default function Profile() {
             <button type="submit" disabled={busy} className="btn">{busy ? 'Saving…' : 'Save changes'}</button>
           </form>
 
+          {user.has_password ? (
           <form className="g" onSubmit={changePassword}>
             <h2>Change password</h2>
             <div className="row">
@@ -141,6 +142,9 @@ export default function Profile() {
             <Fld id="pw-conf" label="Confirm new password" error={pwFields.confirm}><input id="pw-conf" type="password" value={pw.confirm} onChange={pwSet('confirm')} required /></Fld>
             <button type="submit" disabled={pwBusy} className="btn s">{pwBusy ? 'Updating…' : 'Update password'}</button>
           </form>
+          ) : (
+          <div className="g"><h2>Sign-in</h2><p className="mu sm">You sign in with your college Google account, so there is no password to manage here.</p></div>
+          )}
         </div>
 
         <div>

@@ -30,10 +30,13 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const register = useCallback(async (payload) => {
+  /** Google sign-in: `credential` is the ID token from Google's button. The server verifies it and returns our own JWT. */
+  const loginWithGoogle = useCallback(async (credential, remember = true) => {
     try {
-      await api.post('/auth/register', payload);
-      return { ok: true };
+      const res = await api.post('/auth/google', { credential, remember });
+      localStorage.setItem('cmms_token', res.data.token);
+      setUser(res.data.user);
+      return { ok: true, user: res.data.user };
     } catch (err) {
       return { ok: false, ...apiError(err) };
     }
@@ -45,7 +48,7 @@ export function AuthProvider({ children }) {
     return res.data.user;
   }, []);
 
-  const value = useMemo(() => ({ user, loading, login, register, logout, refresh }), [user, loading, login, register, logout, refresh]);
+  const value = useMemo(() => ({ user, loading, login, loginWithGoogle, logout, refresh }), [user, loading, login, loginWithGoogle, logout, refresh]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
