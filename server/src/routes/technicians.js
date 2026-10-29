@@ -8,6 +8,7 @@ const { validate } = require('../middleware/common');
 const { audit } = require('../services/audit');
 const { processQueue } = require('../services/routing');
 const { isOnDuty } = require('../services/duty');
+const config = require('../config');
 
 router.use(authenticate, requireRole('admin'));
 
@@ -58,18 +59,27 @@ const fields = {
   category_ids: ids,
 };
 
+// When Google sign-in is configured the technician's email MUST be their real college address, otherwise they could never log in.
+function requireCollegeEmail(data, ctx) {
+  if (config.googleClientId && !data.email.endsWith(`@${config.allowedEmailDomain}`)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Use the technician's @${config.allowedEmailDomain} college email`, path: ['email'] });
+  }
+}
+
 function requireGenderForVolunteers(data, ctx) {
   if (data.tier === 'Volunteer' && !data.gender) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Gender is required for Volunteer Technicians (used for hostel matching)', path: ['gender'] });
   }
 }
 
-const createSchema = z.object({ ...fields, password: z.string().min(8, 'Password must be at least 8 characters').max(72) }).superRefine(requireGenderForVolunteers);
+// Technicians now sign in with Google, so NO password is needed. (An optional one can still be set for the fallback login.)
+const optPassword = z.string().min(8, 'Password must be at least 8 characters').max(72).optional().or(z.literal(''));
+const createSchema = z.object({ ...fields, password: optPassword }).superRefine(requireGenderForVolunteers).superRefine(requireCollegeEmail);
 const updateSchema = z.object({
   ...fields,
   is_active: z.boolean().default(true),
   password: z.string().min(8, 'Password must be at least 8 characters').max(72).optional().or(z.literal('')),
-}).superRefine(requireGenderForVolunteers);
+}).superRefine(requireGenderForVolunteers).superRefine(requireCollegeEmail);
 
 async function setCategories(c, techId, categoryIds) {
   await c.query('DELETE FROM technician_category WHERE tech_id=$1', [techId]);
@@ -80,7 +90,7 @@ async function setCategories(c, techId, categoryIds) {
 
 router.post('/', validate(createSchema), wrap(async (req, res) => {
   const b = req.body;
-  const hash = await bcrypt.hash(b.password, 10);
+  const hash = b.password ? await bcrypt.hash(b.password, 10) : null; // null = Google-only account
   const id = await tx(async (c) => {
     const { rows } = await c.query(
       `INSERT INTO technician (name, email, phone, location, availability, admin_id, password_hash, tier, gender, weekly_cap, duty_override)

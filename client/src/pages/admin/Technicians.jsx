@@ -134,7 +134,7 @@ function TechModal({ editing, categories, onClose, onDone }) {
           </Fld>
           <Fld id="t-duty" label="Duty status" error={fields.duty_override}>
             <select id="t-duty" value={form.duty_override} onChange={set('duty_override')}>
-              <option value="auto">Auto: weekday 7 to 9 PM + weekends</option>
+              <option value="auto">Auto: follow working hours (Main 8–5, Volunteer 7–9 PM)</option>
               <option value="on">Forced on duty</option>
               <option value="off">Forced off duty</option>
             </select>
@@ -150,8 +150,8 @@ function TechModal({ editing, categories, onClose, onDone }) {
             </>
           )}
         </div>
-        <Fld id="t-pw" label={isNew ? 'Password' : 'New password (optional)'} error={fields.password}>
-          <input id="t-pw" type="password" value={form.password} onChange={set('password')} placeholder={isNew ? 'At least 8 characters' : 'Leave blank to keep current'} />
+        <Fld id="t-pw" label="Password (optional — technicians sign in with Google)" error={fields.password}>
+          <input id="t-pw" type="password" value={form.password} onChange={set('password')} placeholder="Leave blank for Google-only sign-in" />
         </Fld>
 
         <div className="field">

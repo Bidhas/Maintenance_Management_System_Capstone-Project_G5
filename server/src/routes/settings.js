@@ -35,6 +35,7 @@ const schema = z.object({
   sla_hours: z.object({ High: hours, Medium: hours, Low: hours }).optional(),
   notify_email_enabled: z.boolean().optional(),
   notify_inapp_enabled: z.boolean().optional(),
+  assignment_mode: z.enum(['pick', 'auto']).optional(),
 });
 
 router.put('/', validate(schema), wrap(async (req, res) => {
@@ -43,25 +44,26 @@ router.put('/', validate(schema), wrap(async (req, res) => {
   if (b.sla_hours) Object.assign(values, { sla_high_hours: b.sla_hours.High, sla_medium_hours: b.sla_hours.Medium, sla_low_hours: b.sla_hours.Low });
   if (b.notify_email_enabled !== undefined) values.notify_email_enabled = b.notify_email_enabled;
   if (b.notify_inapp_enabled !== undefined) values.notify_inapp_enabled = b.notify_inapp_enabled;
+  if (b.assignment_mode) values.assignment_mode = b.assignment_mode;
   await tx(async (c) => {
     await saveSettings(c, values);
     await audit(c, req.user, 'SETTINGS_UPDATE', 'settings', null, JSON.stringify(values));
   });
+  // Switching to 'auto' should immediately try to place everything that is waiting.
+  if (b.assignment_mode === 'auto') processQueue().catch((e) => console.error('processQueue after mode change:', e.message));
   res.json({ settings: await withCompliance() });
 }));
 
 /* Dev/demo tool: preview routing behaviour at a different simulated time of day without
  * waiting for a real duty window. Never affects anything outside this one process. */
-router.get('/clock', wrap(async (_req, res) => {
-  res.json({ now: duty.now().toISOString(), is_duty_window: duty.isDutyWindow(), next_duty_window: duty.nextDutyWindow(), tz: duty.TZ });
-}));
+router.get('/clock', wrap(async (_req, res) => res.json(duty.dutyInfo())));
 
-const clockSchema = z.object({ mode: z.enum(['live', 'duty-weekday', 'offduty-weekday', 'weekend']) });
+const clockSchema = z.object({ mode: z.enum(['live', 'main-hours', 'volunteer-hours', 'all-off', 'duty-weekday', 'offduty-weekday', 'weekend']) });
 router.post('/clock', validate(clockSchema), wrap(async (req, res) => {
   duty.setSimClock(req.body.mode);
   await audit(null, req.user, 'SIM_CLOCK', 'settings', null, req.body.mode);
   processQueue().catch((e) => console.error('processQueue after sim clock:', e.message));
-  res.json({ now: duty.now().toISOString(), is_duty_window: duty.isDutyWindow(), next_duty_window: duty.nextDutyWindow(), tz: duty.TZ });
+  res.json(duty.dutyInfo());
 }));
 
 module.exports = router;

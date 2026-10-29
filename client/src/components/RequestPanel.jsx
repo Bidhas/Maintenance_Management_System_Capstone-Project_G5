@@ -92,17 +92,20 @@ function TextForm({ title, label, placeholder, min = 5, submitLabel, danger, onS
 function CompleteForm({ requestId, onDone, onCancel, run, busy }) {
   const [notes, setNotes] = useState('');
   const [minutes, setMinutes] = useState('');
+  const [equipment, setEquipment] = useState('');
   const [photo, setPhoto] = useState(null);
   return (
-    <Form title="Submit proof and complete" onCancel={onCancel} busy={busy} disabled={notes.trim().length < 5 || !minutes} submitLabel="Mark complete"
+    <Form title="Submit proof and complete" onCancel={onCancel} busy={busy} disabled={notes.trim().length < 5 || !minutes || equipment.trim().length < 2} submitLabel="Mark complete"
       onSubmit={() => {
         const fd = new FormData();
         fd.append('resolution_notes', notes);
         fd.append('time_spent_minutes', minutes);
+        fd.append('equipment_used', equipment); // feeds the admin Maintenance Log
         if (photo) fd.append('photo', photo);
         return run(() => api.post(`/requests/${requestId}/complete`, fd), 'Work order completed', onDone);
       }}>
       <div className="field"><label htmlFor="c-notes">Resolution notes</label><textarea id="c-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What was done to fix the issue?" /></div>
+      <div className="field"><label htmlFor="c-eq">Equipment / materials used</label><input id="c-eq" value={equipment} onChange={(e) => setEquipment(e.target.value)} placeholder='e.g. ladder, LED bulb, multimeter — or "None"' /></div>
       <div className="row">
         <div className="field"><label htmlFor="c-min">Time spent (minutes)</label><input id="c-min" type="number" min="1" value={minutes} onChange={(e) => setMinutes(e.target.value)} placeholder="e.g. 45" /></div>
         <div className="field"><label htmlFor="c-photo">Completion photo (optional)</label><input id="c-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setPhoto(e.target.files[0] || null)} /></div>
@@ -191,6 +194,7 @@ export default function RequestPanel({ id, onChanged }) {
         <div><dt>Technician</dt><dd>{r.technician ? `${r.technician.name} · ${r.technician.tier}` : 'Unassigned'}</dd></div>
         <div><dt>Logged</dt><dd>{formatDateTime(r.created_at)}</dd></div>
         {r.completed_at && <div><dt>Completed</dt><dd>{formatDateTime(r.completed_at)}</dd></div>}
+        {r.equipment_used && <div><dt>Equipment used</dt><dd>{r.equipment_used}</dd></div>}
       </dl>
 
       <div className="desc">{r.description}</div>
@@ -199,7 +203,7 @@ export default function RequestPanel({ id, onChanged }) {
       {r.status === 'Pending' && r.queue_reason && (
         <div className="g warn mt">
           <b>Queued, not assigned yet</b>
-          <div className="mu sm">{r.queue_reason}. It is assigned automatically as soon as a match is available{data.next_duty_window ? ` (next duty window around ${formatDateTime(data.next_duty_window)})` : ''}.</div>
+          <div className="mu sm">{r.queue_reason}. {user.role === 'technician' ? 'Press Claim to take it.' : 'A technician will pick it up during working hours.'}</div>
         </div>
       )}
 
@@ -238,7 +242,12 @@ export default function RequestPanel({ id, onChanged }) {
             {user.role === 'technician' && isMine && r.status === 'Assigned' && <button type="button" className="btn" disabled={busy} onClick={quick('start', 'Work started')}>Start work</button>}
             {user.role === 'technician' && isMine && r.status === 'In Progress' && <button type="button" className="btn" onClick={() => setAction('complete')}>Submit proof and complete</button>}
             {user.role === 'technician' && isMine && user.tier === 'Volunteer' && ['Assigned', 'In Progress'].includes(r.status) && <button type="button" className="btn s" onClick={() => setAction('escalate')}>Escalate to a Main Technician</button>}
-            {user.role === 'technician' && !r.technician && r.status === 'Pending' && <button type="button" className="btn" disabled={busy} onClick={quick('claim', 'Work order claimed')}>Claim this request</button>}
+            {user.role === 'technician' && !r.technician && r.status === 'Pending' && (
+              <>
+                <button type="button" className="btn" disabled={busy || r.can_claim === false} onClick={quick('claim', 'Job accepted')}>Claim this request</button>
+                {r.can_claim === false && r.claim_blocked_reason && <span className="mu sm">{r.claim_blocked_reason}</span>}
+              </>
+            )}
             {isOwner && r.status === 'Completed' && !r.rating && <button type="button" className="btn" onClick={() => setAction('feedback')}>Leave feedback</button>}
             {isOwner && r.status === 'Completed' && <button type="button" className="btn s" onClick={() => setAction('reopen')}>Reopen this request</button>}
             {user.role === 'admin' && open && <button type="button" className="btn" onClick={() => setAction('assign')}>{r.technician ? 'Reassign technician' : 'Assign technician'}</button>}
