@@ -7,6 +7,7 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const { validate } = require('../middleware/common');
 const { present, getRow, logStatus, canMove } = require('../services/requests');
 const { notify } = require('../services/notify');
+const { requestAssigned } = require('../services/notifyFlow');
 const { audit } = require('../services/audit');
 const { getSettings } = require('../services/settings');
 
@@ -40,8 +41,9 @@ router.post('/:id(\\d+)/assign', requireRole('admin'), validate(assignSchema), w
   });
   const code = requestCode(rid);
   const { r, t, reassign } = result;
-  await notify({ role: 'technician', id: t.tech_id, requestId: rid, type: 'Request', title: 'New work order assigned', message: `${code} "${r.title}" (${r.block}, ${r.room_no}) has been assigned to you.` });
-  await notify({ role: 'requester', id: r.user_id, requestId: rid, type: 'Update', title: reassign ? 'Technician changed' : 'Request assigned', message: `${t.name} has been assigned to "${r.title}". Work should begin shortly.` });
+  // Technician: "assigned". Admins: "request assigned". The requester is not notified of assignment (Sprint 6 workflow).
+  await requestAssigned({ request: r, tech: t, how: 'admin' });
+  // The previous technician (if any) still needs to know the job was taken off them.
   if (reassign && r.tech_id) await notify({ role: 'technician', id: r.tech_id, requestId: rid, type: 'Update', title: 'Work order reassigned', message: `${code} has been reassigned to another technician.` });
   const { sla_hours } = await getSettings();
   res.json({ request: present(await getRow(rid), sla_hours) });
@@ -58,7 +60,6 @@ router.patch('/:id(\\d+)/urgency', requireRole('admin'), validate(urgencySchema)
     await audit(c, req.user, 'URGENCY_CHANGE', 'request', rid, `${rows[0].urgency} → ${req.body.urgency}`);
     return rows[0];
   });
-  if (r.tech_id) await notify({ role: 'technician', id: r.tech_id, requestId: rid, type: 'Update', title: 'Urgency changed', message: `${requestCode(rid)} is now ${req.body.urgency === 'High' ? 'Urgent' : req.body.urgency} priority.` });
   const { sla_hours } = await getSettings();
   res.json({ request: present(await getRow(rid), sla_hours) });
 }));

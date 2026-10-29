@@ -2,11 +2,10 @@
 const router = require('express').Router();
 const { z } = require('zod');
 const { tx } = require('../db');
-const { AppError, wrap, requestCode } = require('../utils/http');
+const { AppError, wrap } = require('../utils/http');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { validate } = require('../middleware/common');
 const { present, getRow, logStatus } = require('../services/requests');
-const { notify, notifyAdmins } = require('../services/notify');
 const { audit } = require('../services/audit');
 const { getSettings } = require('../services/settings');
 const { routeRequest } = require('../services/routing');
@@ -20,7 +19,7 @@ const escalateSchema = z.object({
 });
 router.post('/:id(\\d+)/escalate', requireRole('technician'), validate(escalateSchema), wrap(async (req, res) => {
   const rid = parseInt(req.params.id, 10);
-  const r = await tx(async (c) => {
+  await tx(async (c) => {
     const { rows } = await c.query('SELECT r.*, t.tier FROM request r LEFT JOIN technician t ON t.tech_id = r.tech_id WHERE r.request_id=$1 FOR UPDATE OF r', [rid]);
     const cur = rows[0];
     if (!cur) throw new AppError(404, 'Request not found');
@@ -35,8 +34,6 @@ router.post('/:id(\\d+)/escalate', requireRole('technician'), validate(escalateS
     await audit(c, req.user, 'REQUEST_ESCALATE', 'request', rid, why);
     return cur;
   });
-  await notify({ role: 'requester', id: r.user_id, requestId: rid, type: 'Update', title: 'Request escalated', message: `${requestCode(rid)} has been escalated to a Main Technician for specialist attention.` });
-  await notifyAdmins(rid, 'Escalation logged', `${req.user.name} escalated ${requestCode(rid)}: ${req.body.reason}`, 'Update');
   await routeRequest(rid, req.user);
   const { sla_hours } = await getSettings();
   res.json({ request: present(await getRow(rid), sla_hours) });

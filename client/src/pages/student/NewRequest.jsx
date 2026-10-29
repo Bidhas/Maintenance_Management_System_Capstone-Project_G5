@@ -15,10 +15,13 @@ export default function NewRequest() {
   const toast = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  // Staff/teachers: hostels are hidden unless this box is ticked. Students never get the box (they only ever see hostels + classrooms).
+  const isStudent = user?.account_type === 'Student';
+  const [showAll, setShowAll] = useState(false);
   const { data, error, loading, reload } = useAsync(async () => {
-    const [b, c, r] = await Promise.all([api.get('/blocks'), api.get('/categories'), api.get('/requests')]);
+    const [b, c, r] = await Promise.all([api.get('/blocks', { params: showAll ? { all: 1 } : {} }), api.get('/categories'), api.get('/requests')]);
     return { blocks: b.data.blocks, categories: c.data.categories, duty: r.data.duty };
-  }, []);
+  }, [showAll]);
 
   const [form, setForm] = useState({ block: '', building_id: '', room_no: '', category_id: '', title: '', description: '', urgency: '' });
   const [photo, setPhoto] = useState(null);
@@ -27,13 +30,17 @@ export default function NewRequest() {
   const [busy, setBusy] = useState(false);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const setBlock = (e) => setForm((f) => ({ ...f, block: e.target.value, building_id: '' }));
+  const setBlock = (e) => setForm((f) => ({ ...f, block: e.target.value, building_id: '', room_no: '' }));
+  const setFloor = (e) => setForm((f) => ({ ...f, building_id: e.target.value, room_no: '' }));
 
-  if (loading) return <Spinner />;
+  if (loading && !data) return <Spinner />;
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   const { blocks, categories, duty } = data;
   const selectedBlock = form.block ? blocks.find((b) => b.name === form.block) : null;
   const buildings = selectedBlock?.buildings || [];
+  // Rooms of the chosen block, narrowed to the chosen floor/group. If the block has no registered rooms, fall back to free text.
+  const hasRooms = (selectedBlock?.rooms || []).length > 0;
+  const roomChoices = !hasRooms ? [] : (selectedBlock.rooms).filter((r) => (buildings.length ? String(r.building_id) === String(form.building_id) : !r.building_id));
   const suspended = !!user?.suspended_reason;
 
   async function onSubmit(e) {
@@ -49,7 +56,7 @@ export default function NewRequest() {
       const r = res.data.request;
       toast.success(r.status === 'Assigned' && r.technician
         ? `${r.code} submitted and assigned to ${r.technician.name}`
-        : `${r.code} submitted. Queued: ${r.queue_reason || 'awaiting assignment'}`);
+        : `${r.code} submitted. A technician will pick it up soon.`);
       navigate('/requests/mine');
     } catch (err) {
       const { message, fields: f } = apiError(err);
@@ -68,8 +75,14 @@ export default function NewRequest() {
       )}
       <form className="g form narrow wide-form" onSubmit={onSubmit}>
         <h1>Report a problem</h1>
-        <p className="mu">Tell us where the issue is and what is happening. Hostel requests go to a volunteer for your building; if nobody is on duty it is queued and assigned automatically.</p>
+        <p className="mu">Tell us where the issue is and what is happening. Your request is visible to all technicians, and one of them will pick it up during working hours.</p>
         <fieldset disabled={suspended} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+          {!isStudent && (
+            <label className="inline" style={{ margin: '0 0 10px' }}>
+              <input type="checkbox" checked={showAll} onChange={(e) => { setShowAll(e.target.checked); setForm((f) => ({ ...f, block: '', building_id: '', room_no: '' })); }} style={{ width: 'auto' }} />
+              {' '}Show all blocks (including hostels)
+            </label>
+          )}
           <div className={buildings.length ? 'row3' : 'row'}>
             <Fld id="n-block" label="Block" error={fields.block}>
               <select id="n-block" value={form.block} onChange={setBlock} required>
@@ -78,15 +91,22 @@ export default function NewRequest() {
               </select>
             </Fld>
             {buildings.length > 0 && (
-              <Fld id="n-bld" label={selectedBlock.is_hostel ? 'Hostel building' : 'Building (optional)'} error={fields.building_id}>
-                <select id="n-bld" value={form.building_id} onChange={set('building_id')} required={selectedBlock.is_hostel}>
-                  <option value="">Select a building</option>
+              <Fld id="n-bld" label={selectedBlock.is_hostel ? 'Floor' : 'Floor / group'} error={fields.building_id}>
+                <select id="n-bld" value={form.building_id} onChange={setFloor} required>
+                  <option value="">{selectedBlock.is_hostel ? 'Select a floor' : 'Select a group'}</option>
                   {buildings.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
               </Fld>
             )}
             <Fld id="n-room" label="Room / office" error={fields.room_no}>
-              <input id="n-room" value={form.room_no} onChange={set('room_no')} placeholder="e.g. Room 214" required />
+              {hasRooms ? (
+                <select id="n-room" value={form.room_no} onChange={set('room_no')} required disabled={buildings.length > 0 && !form.building_id}>
+                  <option value="">{buildings.length > 0 && !form.building_id ? 'Select the floor first' : 'Select a room'}</option>
+                  {roomChoices.map((r) => <option key={r.id} value={r.no}>{r.kitchen ? `${r.no} (kitchen)` : r.no}</option>)}
+                </select>
+              ) : (
+                <input id="n-room" value={form.room_no} onChange={set('room_no')} placeholder="e.g. Room 214" required />
+              )}
             </Fld>
           </div>
           <Fld id="n-cat" label="Issue category" error={fields.category_id}>
