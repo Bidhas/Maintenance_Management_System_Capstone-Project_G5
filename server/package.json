@@ -1,7 +1,7 @@
 {
   "name": "cmms-server",
   "version": "1.0.0",
-  "description": "CMMS (CampusCare) REST API - Express + PostgreSQL",
+  "description": "CMMS REST API - Express + PostgreSQL",
   "main": "src/index.js",
   "private": true,
   "scripts": {

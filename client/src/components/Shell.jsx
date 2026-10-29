@@ -67,7 +67,7 @@ export default function Shell() {
       <header className="g">
         <Link to={dashboardPath(user)} className="brand">
           <img src="/logo.png" alt="" />
-          <span>CampusCare<small>College of Science &amp; Technology</small></span>
+          <span>CMMS<small>College of Science &amp; Technology</small></span>
         </Link>
         <nav className="navlinks" aria-label="Main">
           {items.map((i) => <NavLink key={i.to} to={i.to} className={({ isActive }) => (isActive ? 'on' : '')}>{i.label}</NavLink>)}

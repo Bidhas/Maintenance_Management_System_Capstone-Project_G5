@@ -11,7 +11,7 @@ backlog and database design documents.
 ## Project structure
 
 ```
-campuscare/
+cmms/
 ├── server/          Express REST API + PostgreSQL
 │   ├── migrations/   SQL schema
 │   ├── scripts/      migrate / seed / reset
@@ -74,7 +74,7 @@ are saved to `server/uploads/`.
 
 ## 3. Set up the database
 
-**Real data (what the college runs on)** — from the `campuscare` root:
+**Real data (what the college runs on)** — from the `cmms` root:
 
 ```bash
 npm run db:setup:prod                       # migrate + the real blocks / floors / rooms / categories
@@ -98,7 +98,7 @@ To wipe and rebuild the database from scratch at any point: `npm run db:reset --
 
 ## 4. Run it
 
-From the `campuscare` root, this starts both the API (port 5000) and the React dev
+From the `cmms` root, this starts both the API (port 5000) and the React dev
 server (port 5173) together:
 
 ```bash
