@@ -46,6 +46,15 @@ function LocationsTab() {
   const [isHostel, setIsHostel] = useState(false);
   const [busy, setBusy] = useState(false);
   const [nb, setNb] = useState({}); // blockId -> { name, gender }
+  const [nr, setNr] = useState({}); // blockId -> { building_id, rooms, student }  (bulk-add rooms form)
+  const addRooms = (b) => {
+    const v = nr[b.id] || {};
+    if (!v.rooms?.trim()) return Promise.resolve();
+    return attempt(async () => {
+      await api.post(`/blocks/${b.id}/rooms`, { building_id: v.building_id ? Number(v.building_id) : undefined, rooms: v.rooms, student_visible: !!v.student });
+      setNr((m) => ({ ...m, [b.id]: {} }));
+    }, 'Rooms added');
+  };
 
   const attempt = async (fn, msg) => {
     try { await fn(); if (msg) toast.success(msg); reload(); } catch (err) { toast.error(apiError(err).message); }
@@ -69,8 +78,8 @@ function LocationsTab() {
     <div className="g">
       <h2>Blocks and buildings</h2>
       <p className="mu sm">
-        These build the location drop-downs on the request form. Just add the name of the block. Only hostels need buildings: mark a block as a hostel and give each building a gender,
-        and hostel requests go to a Volunteer Technician of the matching gender.
+        These build the location drop-downs on the request form: block, then floor or group, then room. Hostel floors carry a gender (used to match volunteers).
+        Students only see hostel rooms and rooms flagged "Students can report" (classrooms). Rooms starting with K (e.g. K101) are kitchens.
       </p>
 
       <div className="qrow" style={{ marginBottom: 14 }}>
@@ -84,8 +93,9 @@ function LocationsTab() {
           <div className="head">
             <b>{b.name}</b>
             {b.is_hostel && <span className="chip vi">Hostel</span>}
+            <span className="mu tiny">{b.room_total} room(s)</span>
             <span className="sp" />
-            <button type="button" className="btn s xs" onClick={() => attempt(() => api.put(`/blocks/${b.id}`, { name: b.name, hostels: b.hostels, rooms: b.rooms, is_hostel: !b.is_hostel }))}>{b.is_hostel ? 'Make non-hostel' : 'Make hostel'}</button>
+            <button type="button" className="btn s xs" onClick={() => attempt(() => api.put(`/blocks/${b.id}`, { name: b.name, hostels: b.hostels, rooms: b.rooms_declared ?? 0, is_hostel: !b.is_hostel }))}>{b.is_hostel ? 'Make non-hostel' : 'Make hostel'}</button>
             <button type="button" className="btn d xs" onClick={() => attempt(() => api.delete(`/blocks/${b.id}`), 'Block removed')}>Remove</button>
           </div>
           {(b.is_hostel || b.buildings.length > 0) && (
@@ -111,6 +121,16 @@ function LocationsTab() {
               </div>
             </>
           )}
+          <div className="qrow">
+            <select className="w-sm" aria-label={`Floor or group for new rooms in ${b.name}`} value={nr[b.id]?.building_id || ''} onChange={(e) => setNr((m) => ({ ...m, [b.id]: { ...m[b.id], building_id: e.target.value } }))}>
+              <option value="">{b.buildings.length ? 'Floor / group…' : 'No floor'}</option>
+              {b.buildings.map((bd) => <option key={bd.id} value={bd.id}>{bd.name}</option>)}
+            </select>
+            <input placeholder="Add rooms: one per line or comma-separated" aria-label={`Add rooms to ${b.name}`} value={nr[b.id]?.rooms || ''}
+              onChange={(e) => setNr((m) => ({ ...m, [b.id]: { ...m[b.id], rooms: e.target.value } }))} />
+            {!b.is_hostel && <label className="inline"><input type="checkbox" style={{ width: 'auto' }} checked={!!nr[b.id]?.student} onChange={(e) => setNr((m) => ({ ...m, [b.id]: { ...m[b.id], student: e.target.checked } }))} /> Students can report</label>}
+            <button type="button" className="btn s xs" onClick={() => addRooms(b)}>Add rooms</button>
+          </div>
         </div>
       ))}
     </div>
@@ -126,15 +146,15 @@ function ClockTab() {
   }
   const MODES = [
     ['live', 'Real time', 'Use the actual current time.'],
-    ['duty-weekday', 'Weekday evening (on duty)', 'Jump to 8 PM on a weekday, inside the 7 to 9 PM window.'],
-    ['offduty-weekday', 'Weekday daytime (off duty)', 'Jump to 11 AM on a weekday. Nobody is on the automatic schedule.'],
-    ['weekend', 'Weekend (on duty)', 'Jump to a Saturday morning. Everyone is on duty all day.'],
+    ['main-hours', 'Main technicians\' hours', 'Jump to 11 AM. Main technicians (8 AM to 5 PM) are on duty, volunteers are not.'],
+    ['volunteer-hours', 'Volunteer hours', 'Jump to 8 PM. Volunteers (7 to 9 PM) are on duty, Main technicians are not.'],
+    ['all-off', 'Everyone off duty', 'Jump to 2 AM. Nobody is on the automatic schedule.'],
   ];
   return (
     <div className="g">
       <h2>Demo clock</h2>
       <p className="mu sm">
-        Auto-routing only assigns people who are on duty (weekday evenings 7 to 9 PM and weekends, Bhutan time, unless a technician has forced themselves on or off).
+        Technicians can only claim jobs while on duty: Main 8 AM to 5 PM and Volunteers 7 to 9 PM, every day, Bhutan time (unless a technician forced themselves on or off).
         Use this to demonstrate that without waiting for the real clock. It only affects the running server and resets when it restarts.
       </p>
       {loading && !clock ? <Spinner /> : error && !clock ? <ErrorBox message={error} onRetry={reload} /> : (
@@ -142,7 +162,10 @@ function ClockTab() {
           <div className="g inner">
             <span className="mu sm">Server thinks it is</span>
             <h3>{new Date(clock.now).toLocaleString(undefined, { timeZone: clock.tz, weekday: 'long', hour: 'numeric', minute: '2-digit' })}</h3>
-            {clock.is_duty_window ? <b className="gr2">Inside the duty window</b> : <b className="am">Outside the duty window</b>}
+            <div className="fl">
+              <b className={clock.main?.open ? 'gr2' : 'am'}>Main: {clock.main?.open ? 'on duty' : 'off duty'}</b>
+              <b className={clock.volunteer?.open ? 'gr2' : 'am'}>Volunteers: {clock.volunteer?.open ? 'on duty' : 'off duty'}</b>
+            </div>
           </div>
           <div className="clock-modes">
             {MODES.map(([mode, label, text]) => (
@@ -229,6 +252,13 @@ function NotificationsTab() {
             </span>
           </div>
         ))}
+      </div>
+      <div className="g">
+        <h2>How jobs are assigned</h2>
+        <div className="trow">
+          <div><b>Technicians pick their own jobs</b><div className="mu tiny">ON: every request appears on every technician's job board. OFF: the system assigns on-duty technicians automatically.</div></div>
+          <Switch label="Technicians pick jobs" checked={s.assignment_mode === 'pick'} disabled={busy} onChange={(v) => save({ assignment_mode: v ? 'pick' : 'auto' })} />
+        </div>
       </div>
       <div className="g">
         <h2>Notification channels</h2>
