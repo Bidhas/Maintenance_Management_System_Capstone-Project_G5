@@ -6,6 +6,8 @@ const DEFAULTS = {
   sla_low_hours: '72',
   notify_email_enabled: 'true',
   notify_inapp_enabled: 'true',
+  // 'pick' = technicians choose jobs from the board; 'auto' = system assigns on-duty technicians automatically
+  assignment_mode: 'pick',
 };
 
 async function getSettings(client) {
@@ -21,6 +23,7 @@ async function getSettings(client) {
     },
     notify_email_enabled: map.notify_email_enabled === 'true',
     notify_inapp_enabled: map.notify_inapp_enabled === 'true',
+    assignment_mode: map.assignment_mode === 'auto' ? 'auto' : 'pick',
   };
 }
 
