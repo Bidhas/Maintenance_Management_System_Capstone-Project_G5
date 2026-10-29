@@ -7,7 +7,25 @@ const { errorHandler } = require('./middleware/common');
 
 const app = express();
 app.disable('x-powered-by');
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+// Helmet's default Content-Security-Policy would block Google's sign-in script and popup in production
+// (the React app is served by this same server). These are the minimum extra allowances Google needs.
+// 'same-origin-allow-popups' lets the Google popup talk back to our page.
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", 'https://accounts.google.com/gsi/client'],
+      frameSrc: ["'self'", 'https://accounts.google.com/gsi/'],
+      connectSrc: ["'self'", 'https://accounts.google.com/gsi/'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style', 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      mediaSrc: ["'self'", 'blob:'],
+    },
+  },
+}));
 app.use(cors({ origin: config.clientOrigin, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 app.use('/uploads', express.static(config.uploadDir));
@@ -28,6 +46,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/audit', require('./routes/audit'));
+app.use('/api/maintenance-log', require('./routes/maintenanceLog'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/escalations', require('./routes/escalations'));
 

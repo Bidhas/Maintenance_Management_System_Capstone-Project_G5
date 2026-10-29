@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import Shell from './components/Shell';
 
 import StudentNewRequest from './pages/student/NewRequest';
@@ -19,7 +18,7 @@ import AdminTechnicians from './pages/admin/Technicians';
 import AdminReports from './pages/admin/Reports';
 import AdminSettings from './pages/admin/Settings';
 import AdminUsers from './pages/admin/Users';
-import AdminAudit from './pages/admin/Audit';
+import AdminMaintenanceLog from './pages/admin/MaintenanceLog';
 import AdminEscalations from './pages/admin/Escalations';
 import Landing from './pages/Landing';
 import { dashboardPath } from './lib/paths';
@@ -54,7 +53,6 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
 
       <Route element={<Shell />}>
         {/* Student / Staff / Faculty (requester) */}
@@ -77,7 +75,7 @@ export default function App() {
         <Route path="/admin/reports" element={<Protected roles={['admin']}><AdminReports /></Protected>} />
         <Route path="/admin/settings" element={<Protected roles={['admin']}><AdminSettings /></Protected>} />
         <Route path="/admin/users" element={<Protected roles={['admin']}><AdminUsers /></Protected>} />
-        <Route path="/admin/audit" element={<Protected roles={['admin']}><AdminAudit /></Protected>} />
+        <Route path="/admin/maintenance-log" element={<Protected roles={['admin']}><AdminMaintenanceLog /></Protected>} />
         <Route path="/admin/escalations" element={<Protected roles={['admin']}><AdminEscalations /></Protected>} />
       </Route>
 

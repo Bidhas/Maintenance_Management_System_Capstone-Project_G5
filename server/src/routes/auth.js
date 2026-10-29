@@ -11,6 +11,8 @@ const { validate } = require('../middleware/common');
 const { audit } = require('../services/audit');
 const { isOnDuty } = require('../services/duty');
 const { processQueue } = require('../services/routing');
+const { verifyGoogleCredential } = require('../services/google');
+const { classifyCollegeEmail, collegeIdFromEmail } = require('../utils/collegeEmail');
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -22,17 +24,8 @@ const loginLimiter = rateLimit({
 const password = z.string().min(8, 'Password must be at least 8 characters').max(72);
 const phone = z.string().trim().max(20).optional().or(z.literal('')).transform((v) => v || null);
 
-const registerSchema = z.object({
-  name: z.string().trim().min(2, 'Name is required').max(100),
-  email: z.string().trim().toLowerCase().email('Enter a valid email').max(100),
-  password,
-  role: z.enum(['Student', 'Staff', 'Faculty'], { errorMap: () => ({ message: 'Select your role' }) }),
-  college_id: z.string().trim().max(20).optional().or(z.literal('')).transform((v) => v || null),
-  phone,
-});
-
 const loginSchema = z.object({
-  role: z.enum(['requester', 'technician', 'admin']),
+  role: z.enum(['technician', 'admin']), // requesters (students/staff) sign in with Google only
   identifier: z.string().trim().min(1, 'Enter your college ID or email'),
   password: z.string().min(1, 'Enter your password'),
   remember: z.boolean().optional(),
@@ -44,7 +37,7 @@ async function loadProfile(role, id) {
   const { rows } = await query(`SELECT * FROM ${table} WHERE ${idCol} = $1`, [id]);
   const u = rows[0];
   if (!u) return null;
-  const base = { id, role, name: u.name, email: u.email, phone: u.phone || null, created_at: u.created_at };
+  const base = { id, role, name: u.name, email: u.email, phone: u.phone || null, created_at: u.created_at, has_password: !!u.password_hash };
   if (role === 'requester') {
     const { rows: s } = await query(
       `SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE status IN ('Pending','Assigned','In Progress')) AS open
@@ -74,41 +67,83 @@ async function loadProfile(role, id) {
   return { ...base, designation: u.designation || 'Administrator' };
 }
 
-router.post('/register', loginLimiter, validate(registerSchema), wrap(async (req, res) => {
-  const b = req.body;
-  const hash = await bcrypt.hash(b.password, 10);
-  try {
-    const { rows } = await query(
-      `INSERT INTO requester (role, name, phone, email, password_hash, college_id)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING user_id`,
-      [b.role, b.name, b.phone, b.email, hash, b.college_id]);
-    await audit(null, { role: 'requester', id: rows[0].user_id, name: b.name }, 'REGISTER', 'requester', rows[0].user_id);
-    res.status(201).json({ message: 'Account created. You can now sign in.' });
-  } catch (err) {
-    if (err.code === '23505') {
-      const field = /college_id/.test(err.detail || err.constraint || '') ? 'college ID' : 'email';
-      throw new AppError(409, `An account with that ${field} already exists`);
-    }
-    throw err;
-  }
-}));
+/** What the login page needs to know to draw itself (no secrets). */
+router.get('/config', (_req, res) => {
+  res.json({ googleClientId: config.googleClientId || null, passwordLogin: config.allowPasswordLogin, domain: config.allowedEmailDomain });
+});
 
+/** Fallback password sign-in for Admin/Technician accounts. Disabled in production unless ALLOW_PASSWORD_LOGIN=true. */
 router.post('/login', loginLimiter, validate(loginSchema), wrap(async (req, res) => {
+  if (!config.allowPasswordLogin) throw new AppError(403, 'Password sign-in is turned off. Please use "Continue with Google".');
   const { role, identifier, password: pw, remember } = req.body;
   const { table, idCol } = ROLES[role];
   const id = identifier.toLowerCase();
-  const sql = role === 'requester'
-    ? `SELECT * FROM requester WHERE LOWER(email) = $1 OR LOWER(college_id) = $1`
-    : `SELECT * FROM ${table} WHERE LOWER(email) = $1`;
-  const { rows } = await query(sql, [id]);
+  const { rows } = await query(`SELECT * FROM ${table} WHERE LOWER(email) = $1`, [id]);
   const u = rows[0];
   // Same message for unknown account / wrong password / wrong role tab (US-02)
-  const ok = u && (await bcrypt.compare(pw, u.password_hash));
+  const ok = u && u.password_hash && (await bcrypt.compare(pw, u.password_hash)); // Google-only accounts have no hash
   if (!ok) throw new AppError(401, 'Invalid credentials. Check your details and selected role.');
   if (!u.is_active) throw new AppError(403, 'This account has been deactivated. Contact the admin office.');
 
   const user = { id: u[idCol], role, name: u.name };
   res.json({ token: signToken(user, !!remember), user: await loadProfile(role, user.id) });
+}));
+
+/**
+ * POST /api/auth/google  { credential, remember? }
+ * Verifies the Google ID token, finds the matching account, issues OUR normal JWT.
+ *
+ * Who may enter (looked up by verified email, in this order):
+ *   1. an ADMIN row        (created by the admin script)
+ *   2. a TECHNICIAN row    (pre-created by an admin on the Technicians page)
+ *   3. anyone whose email matches the college pattern  ->  a requester account is created automatically
+ *        02250345.cst@rub.edu.bt = Student, name.cst@rub.edu.bt = Staff
+ * Anything else gets 403 "not authorised". Deactivated accounts get 403 too.
+ */
+router.post('/google', loginLimiter, validate(z.object({ credential: z.string().min(20), remember: z.boolean().optional() })), wrap(async (req, res) => {
+  let g;
+  try { g = await verifyGoogleCredential(req.body.credential); }
+  catch (err) {
+    console.error('Google verification failed:', err.message);
+    throw new AppError(401, 'We could not verify your Google sign-in. Please try again with your college account.');
+  }
+
+  const denied = () => new AppError(403, `This Google account (${g.email}) is not authorised. Sign in with your college email, e.g. 02250345.cst@${config.allowedEmailDomain} (students) or yourname.cst@${config.allowedEmailDomain} (staff).`);
+  let role = null; let row = null;
+  for (const r of ['admin', 'technician']) {
+    const { table } = ROLES[r];
+    const { rows } = await query(`SELECT * FROM ${table} WHERE LOWER(email) = $1`, [g.email]);
+    if (rows[0]) { role = r; row = rows[0]; break; }
+  }
+  if (!row) {
+    const { rows } = await query('SELECT * FROM requester WHERE LOWER(email) = $1', [g.email]);
+    if (rows[0]) { role = 'requester'; row = rows[0]; }
+  }
+  if (!row) {
+    const type = classifyCollegeEmail(g.email);
+    if (!type) throw denied();
+    try {
+      const ins = await query(
+        `INSERT INTO requester (role, name, email, college_id, google_sub) VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+        [type, g.name, g.email, collegeIdFromEmail(g.email), g.sub]);
+      role = 'requester'; row = ins.rows[0];
+      await audit(null, { role: 'requester', id: row.user_id, name: row.name }, 'ACCOUNT_AUTO_CREATE', 'requester', row.user_id, `${type} via Google (${g.email})`);
+    } catch (e) {
+      if (e.code !== '23505') throw e;
+      // two tabs signing in at the same moment: the other one won, just read the row it created
+      const { rows } = await query('SELECT * FROM requester WHERE LOWER(email) = $1', [g.email]);
+      role = 'requester'; row = rows[0];
+    }
+  }
+
+  if (!row.is_active) throw new AppError(403, 'This account has been deactivated. Contact the maintenance office.');
+  // google_sub is Google's permanent id for the person. First sign-in links it; after that it must match.
+  const { table, idCol } = ROLES[role];
+  if (!row.google_sub) await query(`UPDATE ${table} SET google_sub = $1 WHERE ${idCol} = $2`, [g.sub, row[idCol]]);
+  else if (row.google_sub !== g.sub) throw new AppError(403, 'This account is linked to a different Google identity. Contact the maintenance office.');
+
+  const user = { id: row[idCol], role, name: row.name };
+  res.json({ token: signToken(user, !!req.body.remember), user: await loadProfile(role, user.id) });
 }));
 
 router.get('/me', authenticate, wrap(async (req, res) => {
@@ -159,6 +194,7 @@ const passwordSchema = z.object({ current_password: z.string().min(1, 'Enter you
 router.put('/password', authenticate, validate(passwordSchema), wrap(async (req, res) => {
   const { table, idCol } = ROLES[req.user.role];
   const { rows } = await query(`SELECT password_hash FROM ${table} WHERE ${idCol}=$1`, [req.user.id]);
+  if (!rows[0].password_hash) throw new AppError(400, 'This account signs in with Google and has no password to change');
   if (!(await bcrypt.compare(req.body.current_password, rows[0].password_hash))) {
     throw new AppError(400, 'Current password is incorrect', { fields: { current_password: 'Current password is incorrect' } });
   }

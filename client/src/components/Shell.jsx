@@ -22,7 +22,7 @@ const NAV = {
     { to: '/admin/escalations', label: 'Escalations' },
     { to: '/admin/reports', label: 'Reports' },
     { to: '/admin/users', label: 'Users' },
-    { to: '/admin/audit', label: 'Audit log' },
+    { to: '/admin/maintenance-log', label: 'Maintenance log' },
     { to: '/admin/settings', label: 'Settings' },
   ],
 };
@@ -35,7 +35,7 @@ export default function Shell() {
   const { pathname } = useLocation();
   const signedIn = !!user;
 
-  // light / dark switch lives on <html> only while signed in, so Landing/Login/Register never change
+  // light / dark switch lives on <html> only while signed in, so Landing/Login never change
   useEffect(() => {
     if (!signedIn) return undefined;
     const root = document.documentElement;
@@ -67,7 +67,7 @@ export default function Shell() {
       <header className="g">
         <Link to={dashboardPath(user)} className="brand">
           <img src="/logo.png" alt="" />
-          <span>CampusCare<small>College of Science &amp; Technology</small></span>
+          <span>CMMS<small>College of Science &amp; Technology</small></span>
         </Link>
         <nav className="navlinks" aria-label="Main">
           {items.map((i) => <NavLink key={i.to} to={i.to} className={({ isActive }) => (isActive ? 'on' : '')}>{i.label}</NavLink>)}

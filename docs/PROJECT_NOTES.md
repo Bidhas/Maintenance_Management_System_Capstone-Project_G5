@@ -102,3 +102,15 @@ queued jobs only if they would have been eligible for auto-assignment.
 
 Admin triage: admins are notified only when a request is queued (nobody eligible), not for
 routine auto-assigned jobs.
+
+
+## Sprint 6 changes (Google sign-in, real data, pick mode)
+
+| Change | Where |
+|---|---|
+| Google sign-in replaces registration (US-50..52) | `POST /api/auth/google`, `services/google.js`, `utils/collegeEmail.js`, `components/GoogleButton.jsx`, `pages/Login.jsx`. `POST /api/auth/register` and `Register.jsx` were removed (US-01 is superseded). Password sign-in remains only for Admin/Technician behind `ALLOW_PASSWORD_LOGIN` |
+| Real locations (US-53..54, 62) | `migrations/003_*.sql` (`room` table), `scripts/data/locations.js`, `seed-production.js`, `create-admin.js`, `wipe-demo.js`; rooms API in `routes/blocks.js` |
+| Block visibility (US-55) | Students: hostel rooms + classrooms (`room.student_visible`); staff: everything except hostels unless "show all" is ticked. Enforced in `POST /api/requests`, not only in the UI |
+| Pick mode + working hours (US-56..57, 61) | `system_setting.assignment_mode`, `services/routing.js` (`evaluateClaim`), `services/duty.js` (Main 8-17, Volunteer 19-21, daily). Technicians see every request on the job board |
+| Maintenance log (US-58) | `routes/maintenanceLog.js`, `pages/admin/MaintenanceLog.jsx`. Replaces the Audit screen; the append-only `audit_log` table and `GET /api/audit` still exist behind the scenes |
+| Notification workflow + email (US-59..60) | `services/notifyFlow.js` decides who is told what; `services/notify.js` sends in-app + Nodemailer email and never throws |

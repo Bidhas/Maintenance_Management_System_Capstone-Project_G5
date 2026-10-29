@@ -11,7 +11,7 @@ backlog and database design documents.
 ## Project structure
 
 ```
-campuscare/
+cmms/
 ├── server/          Express REST API + PostgreSQL
 │   ├── migrations/   SQL schema
 │   ├── scripts/      migrate / seed / reset
@@ -25,7 +25,7 @@ campuscare/
 │   └── src/
 │       ├── pages/        student/, technician/, admin/ + shared pages
 │       ├── components/   Shell (top bar), request table + panel, dialogs, cards, notification bell
-│       ├── styles/       cm.css - the look of every screen after sign-in (Landing/Login/Register use index.css)
+│       ├── styles/       cm.css - the look of every screen after sign-in (Landing/Login use index.css)
 │       ├── hooks/        useAsync, usePolling, useDebounced
 │       ├── context/      auth + toast
 │       └── lib/          API client, formatting helpers
@@ -74,36 +74,31 @@ are saved to `server/uploads/`.
 
 ## 3. Set up the database
 
-From the `campuscare` root:
+**Real data (what the college runs on)** — from the `cmms` root:
 
 ```bash
-npm run db:setup
+npm run db:setup:prod                       # migrate + the real blocks / floors / rooms / categories
+npm run admin:create --prefix server -- --email dorjiphuntsho.cst@rub.edu.bt --name "Dorji Phuntsho"
 ```
 
-This runs the migration (creates all tables) and seeds demo data: an admin, three
-technicians, two students, and a handful of sample work orders matching the Figma
-mockups. Printed to the console are the demo logins:
+The admin script asks for the password in the terminal (or reads `ADMIN_PASSWORD`); it is never stored in the repo.
+People then sign in with **Continue with Google** using their college account — there is no registration:
+students `02250345.cst@rub.edu.bt`, teachers/staff `name.cst@rub.edu.bt`. Technicians are added by the admin
+(Technicians page) using their college email. See `docs/SPRINT6_GUIDE.md` for the Google Cloud and email setup.
 
-| Role                      | Identifier                    | Password      |
-|---------------------------|-------------------------------|---------------|
-| Admin                     | admin@cmms.local              | Admin@123     |
-| Main technician           | p.wangmo@cmms.local (also s.dorji@) | Tech@123 |
-| Volunteer technician      | pema.c@cmms.local (also k.namgay@, tenzin.n@) | Volunteer@123 |
-| Student                   | 02230148@college.bt (or the ID 02230148) | Student@123 |
-| Suspended student (demo)  | 02230255@college.bt           | Student@123   |
+**Demo data (tests / classroom demos only)** — `npm run db:setup` runs the migration and the old demo seed
+(demo admin, technicians, students and work orders, with the demo logins printed to the console).
+Demo accounts only work with the password fallback (`ALLOW_PASSWORD_LOGIN`, on by default outside production),
+and only for Admin / Technician: students and staff are Google-only.
 
-Pema Choden has a "forced on duty" override so you can demo auto-assignment at any
-hour. Admin → Settings has a demo clock to simulate duty / off-duty / weekend.
-
-If you'd rather start from a clean slate with just the categories/blocks/one admin
-account (no demo work orders), run `npm run seed:base --prefix server` instead of the
-full seed.
+To remove demo data from a database that also holds real data: `npm run wipe:demo --prefix server` (dry run),
+then add `-- --yes` to delete. It refuses to run until a real admin exists.
 
 To wipe and rebuild the database from scratch at any point: `npm run db:reset --prefix server`.
 
 ## 4. Run it
 
-From the `campuscare` root, this starts both the API (port 5000) and the React dev
+From the `cmms` root, this starts both the API (port 5000) and the React dev
 server (port 5173) together:
 
 ```bash
