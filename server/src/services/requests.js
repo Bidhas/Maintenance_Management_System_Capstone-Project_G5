@@ -51,6 +51,7 @@ function present(r, sla) {
     started_at: r.started_at,
     completed_at: r.completed_at,
     resolution_notes: r.resolution_notes,
+    equipment_used: r.equipment_used,
     time_spent_minutes: r.time_spent_minutes,
     completion_photo_url: r.completion_photo_url,
     decline_reason: r.decline_reason,

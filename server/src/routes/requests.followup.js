@@ -6,7 +6,7 @@ const { AppError, wrap, requestCode } = require('../utils/http');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { validate } = require('../middleware/common');
 const { present, getRow, logStatus } = require('../services/requests');
-const { notify, notifyAdmins } = require('../services/notify');
+const { notify } = require('../services/notify');
 const { audit } = require('../services/audit');
 const { getSettings } = require('../services/settings');
 const { routeRequest } = require('../services/routing');
@@ -33,7 +33,6 @@ router.post('/:id(\\d+)/reopen', requireRole('requester'), validate(reopenSchema
     return { ...cur, keepTech };
   });
   if (r.keepTech) await notify({ role: 'technician', id: r.tech_id, requestId: rid, type: 'Update', title: 'Request reopened', message: `${requestCode(rid)} was reopened: ${req.body.why}` });
-  await notifyAdmins(rid, 'Request reopened', `${req.user.name} reopened ${requestCode(rid)}: ${req.body.why}`, 'Update');
   if (!r.keepTech) await routeRequest(rid, req.user);
   const { sla_hours } = await getSettings();
   res.json({ request: present(await getRow(rid), sla_hours) });
@@ -56,7 +55,6 @@ router.post('/:id(\\d+)/feedback', requireRole('requester'), validate(feedbackSc
     await audit(c, req.user, 'FEEDBACK', 'request', rid, `${req.body.rating}/5`);
     return cur;
   });
-  if (r.tech_id) await notify({ role: 'technician', id: r.tech_id, requestId: rid, type: 'Update', title: 'New feedback', message: `${requestCode(rid)} was rated ${req.body.rating}/5.` });
   const { sla_hours } = await getSettings();
   res.json({ request: present(await getRow(rid), sla_hours) });
 }));
