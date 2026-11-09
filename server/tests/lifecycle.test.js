@@ -1,3 +1,4 @@
+process.env.GOOGLE_CLIENT_ID = '';
 process.env.NODE_ENV = 'test';
 const request = require('supertest');
 const { execSync } = require('child_process');
@@ -16,7 +17,9 @@ jest.mock('../src/services/google', () => ({
 const googleLogin = (email, sub = `sub-${email}`, name) =>
   request(app).post('/api/auth/google').send({ credential: `${email}|${sub}|${name || 'Test Person'}-padding-padding` });
 
-execSync(`node ${path.join(__dirname, '..', 'scripts', 'migrate.js')}`, {
+// After: passes the path as an argument, so spaces are safe on Windows, Mac and Linux
+const { execFileSync } = require('child_process');
+execFileSync(process.execPath, [path.join(__dirname, '..', 'scripts', 'migrate.js')], {
   env: { ...process.env, DATABASE_URL: process.env.TEST_DATABASE_URL, NODE_ENV: 'test' },
   stdio: 'inherit',
 });
