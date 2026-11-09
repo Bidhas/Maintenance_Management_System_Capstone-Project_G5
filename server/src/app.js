@@ -6,6 +6,10 @@ const config = require('./config');
 const { errorHandler } = require('./middleware/common');
 
 const app = express();
+// Behind Render's reverse proxy the real client IP arrives in X-Forwarded-For.
+// "1" trusts exactly one proxy hop, so the login rate limiter in routes/auth.js
+// counts each user separately instead of treating everyone as one IP.
+app.set('trust proxy', 1);
 app.disable('x-powered-by');
 // Helmet's default Content-Security-Policy would block Google's sign-in script and popup in production
 // (the React app is served by this same server). These are the minimum extra allowances Google needs.
