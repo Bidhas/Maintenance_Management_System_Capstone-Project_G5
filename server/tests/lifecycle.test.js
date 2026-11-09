@@ -1,4 +1,9 @@
 process.env.GOOGLE_CLIENT_ID = '';
+// Safety guard: the suite creates and resets data, so it must NEVER run against
+// the live database. Refuse to start unless a separate test database is configured.
+if (!process.env.TEST_DATABASE_URL) {
+  throw new Error('TEST_DATABASE_URL is not set. Point it at a throwaway database, never the live one.');
+}
 process.env.NODE_ENV = 'test';
 const request = require('supertest');
 const { execSync } = require('child_process');
