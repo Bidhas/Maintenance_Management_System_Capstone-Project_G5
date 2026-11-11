@@ -76,7 +76,7 @@ export default function Login() {
         {error && <p className="text-sm rd rounded-xl px-3 py-2 mt-4" style={{ background: 'color-mix(in srgb, var(--rd) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--rd) 30%, transparent)' }}>{error}</p>}
 
         <p className="text-center text-xs text-mu mt-5">
-          Students use <b>02250345.cst@{cfg?.domain || 'rub.edu.bt'}</b>, teachers and staff use <b>yourname.cst@{cfg?.domain || 'rub.edu.bt'}</b>. Other accounts are not allowed.
+          Students use <b>studentnumber.cst@{cfg?.domain || 'rub.edu.bt'}</b>, teachers and staff use <b>yourname.cst@{cfg?.domain || 'rub.edu.bt'}</b>. Other accounts are not allowed.
         </p>
 
         {cfg?.passwordLogin && (

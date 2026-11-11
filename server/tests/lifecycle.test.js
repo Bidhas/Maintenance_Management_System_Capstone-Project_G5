@@ -1,3 +1,10 @@
+// [Sprint 7] Test-environment safety. These lines must stay ABOVE every require().
+// The suite creates and resets data, so it must NEVER run against the live database.
+// Refuse to start unless a separate test database is configured.
+if (!process.env.TEST_DATABASE_URL) {
+  throw new Error('TEST_DATABASE_URL is not set. Point it at a throwaway database, never the live one.');
+}
+
 process.env.GOOGLE_CLIENT_ID = '';
 process.env.NODE_ENV = 'test';
 const request = require('supertest');
