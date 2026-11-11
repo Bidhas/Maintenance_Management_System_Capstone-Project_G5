@@ -1,0 +1,28 @@
+# Files Docker must NOT send into the image build.
+# Most important: every .env file (secrets) and every node_modules folder
+# (they must be installed fresh inside Linux, never copied from Windows).
+
+.git
+.github
+.gitignore
+
+# Dependencies are installed inside the image
+**/node_modules
+
+# Secrets - never bake these into an image. (.env.example is safe and allowed.)
+**/.env
+**/.env.*
+!**/.env.example
+
+# Build output and runtime files created locally
+client/dist
+server/uploads
+**/coverage
+*.log
+
+# Not needed at runtime (keeps the image small)
+server/tests
+docs
+*.md
+Sprint-*
+*.zip

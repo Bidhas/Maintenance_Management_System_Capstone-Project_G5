@@ -17,6 +17,8 @@ function getTransporter() {
   if (transporter) return transporter;
   transporter = config.smtp.host
     ? nodemailer.createTransport({
+        // [Sprint 7] Force IPv4. Some hosts have no IPv6 route and fail with ENETUNREACH to smtp.gmail.com.
+        family: 4,
         host: config.smtp.host,
         port: config.smtp.port,
         secure: config.smtp.port === 465, // 465 = implicit TLS; 587 = STARTTLS (handled automatically)

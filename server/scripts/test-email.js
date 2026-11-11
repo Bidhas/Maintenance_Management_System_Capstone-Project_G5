@@ -11,6 +11,8 @@ async function main() {
   if (!to) { console.error('Usage: npm run email:test -- you@example.com'); process.exit(1); }
   if (!config.smtp.host) { console.error('SMTP_HOST is not set in server/.env, so emails are only logged, never sent. Fill in the SMTP_* lines first.'); process.exit(1); }
   const t = nodemailer.createTransport({
+    // [Sprint 7] Force IPv4. Some hosts have no IPv6 route and fail with ENETUNREACH to smtp.gmail.com.
+    family: 4,
     host: config.smtp.host, port: config.smtp.port, secure: config.smtp.port === 465,
     auth: config.smtp.user ? { user: config.smtp.user, pass: config.smtp.pass } : undefined,
     connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
