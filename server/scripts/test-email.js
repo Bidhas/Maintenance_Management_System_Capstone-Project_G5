@@ -20,7 +20,7 @@ async function main() {
   try {
     await t.verify(); // checks host, port, TLS and the login WITHOUT sending anything
     console.log('SMTP connection and login OK.');
-    const info = await t.sendMail({ from: config.smtp.from, to, subject: '[CampusCare] Test email', text: 'If you can read this, CampusCare email notifications work.' });
+    const info = await t.sendMail({ from: config.smtp.from, to, subject: 'College Maintenance Management System [CMMS] Test email', text: 'If you can read this, College Maintenance Management System email notifications work.' });
     console.log('Sent. Server replied:', info.response);
   } catch (err) {
     console.error('FAILED:', err.message);

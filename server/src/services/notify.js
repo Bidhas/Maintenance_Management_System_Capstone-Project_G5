@@ -37,11 +37,11 @@ async function sendEmail(to, subject, text, link) {
   try {
     const open = link || config.appUrl;
     const html = `<div style="font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:520px">
-      <h3 style="margin:0 0 8px">${esc(subject.replace(/^\[CampusCare\]\s*/, ''))}</h3>
+      <h3 style="margin:0 0 8px">${esc(subject.replace(/^\[College Maintenance Management System (CMMS)\]\s*/, ''))}</h3>
       <p style="margin:0 0 16px;color:#333">${esc(text)}</p>
-      <p><a href="${esc(open)}" style="background:#2563eb;color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none">Open CampusCare</a></p>
+      <p><a href="${esc(open)}" style="background:#2563eb;color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none">Open CMMS</a></p>
       <p style="color:#888;font-size:12px">College of Science &amp; Technology — Maintenance Management. You can turn email notifications off on your Profile page.</p></div>`;
-    const info = await getTransporter().sendMail({ from: config.smtp.from, to, subject, text: `${text}\n\nOpen CampusCare: ${open}`, html });
+    const info = await getTransporter().sendMail({ from: config.smtp.from, to, subject, text: `${text}\n\nOpen CMMS: ${open}`, html });
     if (!config.smtp.host) console.log(`[email:dev] to=${to} subject="${subject}"`);
     return info;
   } catch (err) {
@@ -68,7 +68,7 @@ async function notify({ role, id, requestId, title, message, type = 'Update' }) 
     }
     if (settings.notify_email_enabled && rec.email_notifications && rec.email) {
       const link = requestId ? `${config.appUrl}/requests/${requestId}` : `${config.appUrl}/notifications`;
-      sendEmail(rec.email, `[CampusCare] ${title}`, message, link); // not awaited on purpose
+      sendEmail(rec.email, `[College Maintenance Management System (CMMS)] ${title}`, message, link); // not awaited on purpose
     }
   } catch (err) {
     console.error('notify failed:', err.message);
