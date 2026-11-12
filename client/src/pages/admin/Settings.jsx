@@ -15,7 +15,7 @@ export default function Settings() {
   return (
     <>
       <h1>Settings</h1>
-      <p className="mu">Manage CampusCare system configuration.</p>
+      <p className="mu">Manage CMMS system configuration.</p>
       <div className="fl tabs" role="tablist">
         {TABS.map((t) => (
           <button type="button" role="tab" aria-selected={tab === t} key={t} onClick={() => setTab(t)} className={`chip${tab === t ? ' sel' : ''}`}>{t}</button>
@@ -267,7 +267,7 @@ function NotificationsTab() {
           <Switch label="Email notifications" checked={s.notify_email_enabled} disabled={busy} onChange={(v) => save({ notify_email_enabled: v })} />
         </div>
         <div className="trow">
-          <div><b>In-app notifications</b><div className="mu tiny">Show alerts inside CampusCare</div></div>
+          <div><b>In-app notifications</b><div className="mu tiny">Show alerts inside CMMS</div></div>
           <Switch label="In-app notifications" checked={s.notify_inapp_enabled} disabled={busy} onChange={(v) => save({ notify_inapp_enabled: v })} />
         </div>
       </div>

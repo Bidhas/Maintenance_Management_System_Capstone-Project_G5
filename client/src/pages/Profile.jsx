@@ -157,7 +157,7 @@ export default function Profile() {
               <Switch label="Email notifications" checked={form.email_notifications} onChange={(v) => setForm((f) => ({ ...f, email_notifications: v }))} />
             </div>
             <div className="trow">
-              <div><b>In-app notifications</b><div className="mu tiny">Show alerts inside CampusCare</div></div>
+              <div><b>In-app notifications</b><div className="mu tiny">Show alerts inside CMMS</div></div>
               <Switch label="In-app notifications" checked={form.inapp_notifications} onChange={(v) => setForm((f) => ({ ...f, inapp_notifications: v }))} />
             </div>
             <button type="button" className="btn s xs mt" onClick={() => saveProfile()}>Save preferences</button>
